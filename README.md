@@ -1,10 +1,10 @@
 # KarteiCard
 
-KarteiCard ist eine kleine Karteikarten-App mit Docker, Flask und MySQL. Du kannst Karten erstellen, nach Kategorien sortieren, im Lernmodus wiederholen und im Quizmodus Multiple-Choice-Fragen beantworten.
+KarteiCard ist eine kleine Karteikarten-App mit Docker, Flask und MySQL. Sie ist besonders für IT-Themen gedacht: Du kannst zu jeder Karte neben Frage und Antwort auch Beispiele wie Commands, Code-Snippets oder Praxisfälle speichern.
 
 ## Funktionen
 
-- Karteikarten mit Frage, Antwort und Kategorie erstellen
+- Karteikarten mit Frage, Antwort, Beispiel und Kategorie erstellen
 - Karten dauerhaft in MySQL speichern
 - Lernmodus mit Antwort-Aufdecken und Statistik
 - Quizmodus mit gemischten Antwortoptionen
@@ -40,8 +40,8 @@ Die Datenbanktabellen werden beim Start der App automatisch angelegt. Die MySQL-
 Für den Import braucht die CSV-Datei mindestens diese Spalten:
 
 ```csv
-question,answer,category
-"Was ist 2+2?","4","Mathe"
+question,answer,examples,category
+"Was macht chmod +x?","Macht eine Datei ausführbar.","chmod +x deploy.sh","Linux"
 ```
 
-`category` ist optional. Wenn sie fehlt oder leer ist, wird `Allgemein` verwendet.
+`examples` und `category` sind optional. Wenn `category` fehlt oder leer ist, wird `Allgemein` verwendet.

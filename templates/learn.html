@@ -24,6 +24,12 @@
         <details>
           <summary>Antwort aufdecken</summary>
           <p>{{ card.answer }}</p>
+          {% if card.examples %}
+            <div class="example-block">
+              <strong>Beispiel</strong>
+              <pre><code>{{ card.examples }}</code></pre>
+            </div>
+          {% endif %}
         </details>
       </article>
       <div class="actions">

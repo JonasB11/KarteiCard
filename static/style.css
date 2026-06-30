@@ -228,6 +228,11 @@ textarea {
   min-height: 92px;
 }
 
+textarea[name="examples"] {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.92rem;
+}
+
 button {
   border: 0;
   border-radius: 8px;
@@ -325,6 +330,47 @@ button:hover {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.example-preview,
+.example-block pre {
+  margin: 10px 0;
+  overflow: auto;
+  border: 1px solid #d5e1de;
+  border-radius: 8px;
+  background: #111817;
+  color: #d8f5ed;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.example-preview {
+  display: -webkit-box;
+  max-height: 74px;
+  padding: 10px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.example-preview code,
+.example-block code {
+  font: inherit;
+}
+
+.example-block {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.example-block strong {
+  color: var(--ink);
+}
+
+.example-block pre {
+  padding: 14px;
 }
 
 small {

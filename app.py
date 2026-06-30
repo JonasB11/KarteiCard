@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from flask import Flask, Response, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func, inspect
+from sqlalchemy import func, inspect, text
 
 
 db = SQLAlchemy()
@@ -17,6 +17,7 @@ class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text, nullable=False)
+    examples = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(120), nullable=False, default="Allgemein", index=True)
     times_seen = db.Column(db.Integer, nullable=False, default=0)
     times_correct = db.Column(db.Integer, nullable=False, default=0)
@@ -49,6 +50,10 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        columns = {column["name"] for column in inspect(db.engine).get_columns(Card.__tablename__)}
+        if "examples" not in columns:
+            with db.engine.begin() as connection:
+                connection.execute(text(f"ALTER TABLE {Card.__tablename__} ADD COLUMN examples TEXT NULL"))
         existing_indexes = {index["name"] for index in inspect(db.engine).get_indexes(Card.__tablename__)}
         for index in Card.__table__.indexes:
             if index.name not in existing_indexes:
@@ -93,13 +98,14 @@ def create_app():
     def create_card():
         question = request.form.get("question", "").strip()
         answer = request.form.get("answer", "").strip()
+        examples = request.form.get("examples", "").strip()
         category = request.form.get("category", "").strip() or "Allgemein"
 
         if not question or not answer:
             flash("Bitte fülle Frage und Antwort aus.", "error")
             return redirect(url_for("index"))
 
-        db.session.add(Card(question=question, answer=answer, category=category))
+        db.session.add(Card(question=question, answer=answer, examples=examples, category=category))
         db.session.commit()
         flash("Karte gespeichert.", "success")
         return redirect(url_for("index"))
@@ -108,11 +114,11 @@ def create_app():
     def export_cards():
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(["question", "answer", "category", "times_seen", "times_correct"])
+        writer.writerow(["question", "answer", "examples", "category", "times_seen", "times_correct"])
 
         cards = Card.query.order_by(Card.category.asc(), Card.created_at.asc()).all()
         for card in cards:
-            writer.writerow([card.question, card.answer, card.category, card.times_seen, card.times_correct])
+            writer.writerow([card.question, card.answer, card.examples or "", card.category, card.times_seen, card.times_correct])
 
         csv_data = output.getvalue()
         return Response(
@@ -150,13 +156,14 @@ def create_app():
             normalized = {(key or "").strip().lower(): (value or "").strip() for key, value in row.items()}
             question = normalized.get("question", "")
             answer = normalized.get("answer", "")
+            examples = normalized.get("examples", "")
             category = normalized.get("category", "") or "Allgemein"
 
             if not question or not answer:
                 skipped += 1
                 continue
 
-            db.session.add(Card(question=question, answer=answer, category=category))
+            db.session.add(Card(question=question, answer=answer, examples=examples, category=category))
             imported += 1
 
         db.session.commit()

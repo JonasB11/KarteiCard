@@ -30,8 +30,12 @@
           <textarea name="answer" rows="4" required placeholder="Die passende Antwort"></textarea>
         </label>
         <label>
+          Beispiel
+          <textarea name="examples" rows="5" placeholder="z. B. Befehl, Code-Snippet oder kurzer Praxisfall"></textarea>
+        </label>
+        <label>
           Kategorie
-          <input name="category" placeholder="z. B. Mathe, Englisch, Geschichte">
+          <input name="category" placeholder="z. B. Linux, Netzwerk, Python">
         </label>
         <button type="submit">Karte speichern</button>
       </form>
@@ -41,7 +45,7 @@
           <h2>CSV Import/Export</h2>
           <span class="dot blue"></span>
         </div>
-        <p class="muted">Spalten: question, answer, category</p>
+        <p class="muted">Spalten: question, answer, examples, category</p>
         <form class="import-form" method="post" action="{{ url_for('import_cards') }}" enctype="multipart/form-data">
           <label>
             CSV-Datei importieren
@@ -82,6 +86,9 @@
               <span class="tag">{{ card.category }}</span>
               <h3>{{ card.question }}</h3>
               <p>{{ card.answer }}</p>
+              {% if card.examples %}
+                <pre class="example-preview"><code>{{ card.examples }}</code></pre>
+              {% endif %}
               <div class="card-meta">
                 <small>{{ card.times_seen }}x gelernt</small>
                 <small>{{ card.success_rate }}% richtig</small>
