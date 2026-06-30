@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Deine Lernkarten</p>
+      <h1>Karten erstellen, speichern und gezielt wiederholen.</h1>
+    </div>
+    <div class="stats">
+      <span><strong>{{ stats.total }}</strong>Karten</span>
+      <span><strong>{{ stats.categories }}</strong>Kategorien</span>
+      <span><strong>{{ stats.learned }}</strong>Wiederholungen</span>
+      <span><strong>{{ stats.correct }}</strong>Richtig</span>
+    </div>
+  </section>
+
+  <section class="grid two">
+    <form class="panel form" method="post" action="{{ url_for('create_card') }}">
+      <h2>Neue Karte</h2>
+      <label>
+        Frage
+        <textarea name="question" rows="4" required placeholder="Was möchtest du lernen?"></textarea>
+      </label>
+      <label>
+        Antwort
+        <textarea name="answer" rows="4" required placeholder="Die passende Antwort"></textarea>
+      </label>
+      <label>
+        Kategorie
+        <input name="category" placeholder="z. B. Mathe, Englisch, Geschichte">
+      </label>
+      <button type="submit">Karte speichern</button>
+    </form>
+
+    <section class="panel">
+      <div class="panel-title">
+        <h2>Gespeicherte Karten</h2>
+        <form method="get" class="filter">
+          <select name="category" onchange="this.form.submit()">
+            <option value="">Alle Kategorien</option>
+            {% for category in categories %}
+              <option value="{{ category }}" {% if category == active_category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+
+      <div class="card-list">
+        {% for card in cards %}
+          <article class="study-card compact">
+            <div>
+              <span class="tag">{{ card.category }}</span>
+              <h3>{{ card.question }}</h3>
+              <p>{{ card.answer }}</p>
+              <small>{{ card.times_seen }}x gelernt, {{ card.success_rate }}% richtig</small>
+            </div>
+            <form method="post" action="{{ url_for('delete_card', card_id=card.id) }}">
+              <button class="ghost danger" type="submit">Löschen</button>
+            </form>
+          </article>
+        {% else %}
+          <p class="empty">Noch keine Karten vorhanden.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </section>
+{% endblock %}

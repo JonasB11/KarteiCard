@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="panel learn-panel">
+    <div class="panel-title">
+      <div>
+        <p class="eyebrow">Lernmodus</p>
+        <h1>Frage lesen, Antwort aufdecken, Ergebnis speichern.</h1>
+      </div>
+      <form method="get" class="filter">
+        <select name="category" onchange="this.form.submit()">
+          <option value="">Alle Kategorien</option>
+          {% for category in categories %}
+            <option value="{{ category }}" {% if category == active_category %}selected{% endif %}>{{ category }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    {% if card %}
+      <article class="flip-card">
+        <span class="tag">{{ card.category }}</span>
+        <h2>{{ card.question }}</h2>
+        <details>
+          <summary>Antwort aufdecken</summary>
+          <p>{{ card.answer }}</p>
+        </details>
+      </article>
+      <div class="actions">
+        <form method="post" action="{{ url_for('record_result', card_id=card.id) }}">
+          <input type="hidden" name="result" value="wrong">
+          <input type="hidden" name="next" value="{{ url_for('learn', category=active_category) }}">
+          <button class="secondary" type="submit">Noch üben</button>
+        </form>
+        <form method="post" action="{{ url_for('record_result', card_id=card.id) }}">
+          <input type="hidden" name="result" value="correct">
+          <input type="hidden" name="next" value="{{ url_for('learn', category=active_category) }}">
+          <button type="submit">Gewusst</button>
+        </form>
+      </div>
+    {% else %}
+      <p class="empty">Für diese Auswahl gibt es noch keine Karten.</p>
+    {% endif %}
+  </section>
+{% endblock %}

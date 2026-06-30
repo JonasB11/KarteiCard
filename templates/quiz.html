@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="panel quiz-panel">
+    <p class="eyebrow">Quizmodus</p>
+    <h1>Wähle die richtige Antwort.</h1>
+
+    {% if needs_more %}
+      <p class="empty">Erstelle mindestens zwei Karten, damit der Quizmodus Antwortoptionen mischen kann.</p>
+    {% else %}
+      <article class="quiz-question">
+        <span class="tag">{{ question_card.category }}</span>
+        <h2>{{ question_card.question }}</h2>
+      </article>
+      <form class="answers" method="post" action="{{ url_for('answer_quiz', card_id=question_card.id) }}">
+        {% for option in options %}
+          <button type="submit" name="answer" value="{{ option }}">{{ option }}</button>
+        {% endfor %}
+      </form>
+    {% endif %}
+  </section>
+{% endblock %}

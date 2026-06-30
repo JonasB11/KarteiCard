@@ -1,0 +1,35 @@
+# KarteiCard
+
+KarteiCard ist eine kleine Karteikarten-App mit Docker, Flask und MySQL. Du kannst Karten erstellen, nach Kategorien sortieren, im Lernmodus wiederholen und im Quizmodus Multiple-Choice-Fragen beantworten.
+
+## Funktionen
+
+- Karteikarten mit Frage, Antwort und Kategorie erstellen
+- Karten dauerhaft in MySQL speichern
+- Lernmodus mit Antwort-Aufdecken und Statistik
+- Quizmodus mit gemischten Antwortoptionen
+- Docker-Compose-Setup für App und Datenbank
+
+## Starten
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Danach ist die App unter `http://localhost:5000` erreichbar.
+
+## Konfiguration
+
+Die wichtigsten Variablen stehen in `.env.example`:
+
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `MYSQL_ROOT_PASSWORD`
+- `DATABASE_URL`
+- `FLASK_SECRET_KEY`
+
+## Entwicklung
+
+Die Datenbanktabellen werden beim Start der App automatisch angelegt. Die MySQL-Daten bleiben im Docker-Volume `mysql_data` erhalten.
