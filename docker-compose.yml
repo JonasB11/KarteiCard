@@ -8,7 +8,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-mysql+pymysql://karteicard:karteicard@db:3306/karteicard}
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-dev-secret}
     ports:
-      - "5000:5000"
+      - "5001:5000"
     restart: unless-stopped
 
   db:

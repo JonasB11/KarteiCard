@@ -17,7 +17,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Danach ist die App unter `http://localhost:5000` erreichbar.
+Danach ist die App unter `http://localhost:5001` erreichbar.
 
 ## Konfiguration
 
