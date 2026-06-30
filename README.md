@@ -8,6 +8,7 @@ KarteiCard ist eine kleine Karteikarten-App mit Docker, Flask und MySQL. Du kann
 - Karten dauerhaft in MySQL speichern
 - Lernmodus mit Antwort-Aufdecken und Statistik
 - Quizmodus mit gemischten Antwortoptionen
+- CSV-Import und CSV-Export für Karteikarten
 - Docker-Compose-Setup für App und Datenbank
 
 ## Starten
@@ -33,3 +34,14 @@ Die wichtigsten Variablen stehen in `.env.example`:
 ## Entwicklung
 
 Die Datenbanktabellen werden beim Start der App automatisch angelegt. Die MySQL-Daten bleiben im Docker-Volume `mysql_data` erhalten.
+
+## CSV-Format
+
+Für den Import braucht die CSV-Datei mindestens diese Spalten:
+
+```csv
+question,answer,category
+"Was ist 2+2?","4","Mathe"
+```
+
+`category` ist optional. Wenn sie fehlt oder leer ist, wird `Allgemein` verwendet.

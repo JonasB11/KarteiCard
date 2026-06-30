@@ -1,8 +1,10 @@
+import csv
+import io
 import os
 import random
 from datetime import datetime, timezone
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, Response, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 
@@ -83,6 +85,68 @@ def create_app():
         db.session.add(Card(question=question, answer=answer, category=category))
         db.session.commit()
         flash("Karte gespeichert.", "success")
+        return redirect(url_for("index"))
+
+    @app.route("/cards/export")
+    def export_cards():
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["question", "answer", "category", "times_seen", "times_correct"])
+
+        cards = Card.query.order_by(Card.category.asc(), Card.created_at.asc()).all()
+        for card in cards:
+            writer.writerow([card.question, card.answer, card.category, card.times_seen, card.times_correct])
+
+        csv_data = output.getvalue()
+        return Response(
+            csv_data,
+            content_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": "attachment; filename=karteicard_export.csv"},
+        )
+
+    @app.route("/cards/import", methods=["POST"])
+    def import_cards():
+        upload = request.files.get("csv_file")
+        if not upload or upload.filename == "":
+            flash("Bitte wähle eine CSV-Datei aus.", "error")
+            return redirect(url_for("index"))
+
+        try:
+            stream = io.StringIO(upload.stream.read().decode("utf-8-sig"), newline=None)
+            reader = csv.DictReader(stream)
+        except UnicodeDecodeError:
+            flash("Die CSV-Datei muss als UTF-8 gespeichert sein.", "error")
+            return redirect(url_for("index"))
+
+        if not reader.fieldnames:
+            flash("Die CSV-Datei ist leer.", "error")
+            return redirect(url_for("index"))
+
+        headers = {header.strip().lower() for header in reader.fieldnames if header}
+        if not {"question", "answer"}.issubset(headers):
+            flash("Die CSV-Datei braucht die Spalten question und answer.", "error")
+            return redirect(url_for("index"))
+
+        imported = 0
+        skipped = 0
+        for row in reader:
+            normalized = {(key or "").strip().lower(): (value or "").strip() for key, value in row.items()}
+            question = normalized.get("question", "")
+            answer = normalized.get("answer", "")
+            category = normalized.get("category", "") or "Allgemein"
+
+            if not question or not answer:
+                skipped += 1
+                continue
+
+            db.session.add(Card(question=question, answer=answer, category=category))
+            imported += 1
+
+        db.session.commit()
+        if skipped:
+            flash(f"{imported} Karten importiert, {skipped} Zeilen übersprungen.", "success")
+        else:
+            flash(f"{imported} Karten importiert.", "success")
         return redirect(url_for("index"))
 
     @app.route("/cards/<int:card_id>/delete", methods=["POST"])

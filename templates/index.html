@@ -15,22 +15,39 @@
   </section>
 
   <section class="grid two">
-    <form class="panel form" method="post" action="{{ url_for('create_card') }}">
-      <h2>Neue Karte</h2>
-      <label>
-        Frage
-        <textarea name="question" rows="4" required placeholder="Was möchtest du lernen?"></textarea>
-      </label>
-      <label>
-        Antwort
-        <textarea name="answer" rows="4" required placeholder="Die passende Antwort"></textarea>
-      </label>
-      <label>
-        Kategorie
-        <input name="category" placeholder="z. B. Mathe, Englisch, Geschichte">
-      </label>
-      <button type="submit">Karte speichern</button>
-    </form>
+    <div class="sidebar-stack">
+      <form class="panel form" method="post" action="{{ url_for('create_card') }}">
+        <h2>Neue Karte</h2>
+        <label>
+          Frage
+          <textarea name="question" rows="4" required placeholder="Was möchtest du lernen?"></textarea>
+        </label>
+        <label>
+          Antwort
+          <textarea name="answer" rows="4" required placeholder="Die passende Antwort"></textarea>
+        </label>
+        <label>
+          Kategorie
+          <input name="category" placeholder="z. B. Mathe, Englisch, Geschichte">
+        </label>
+        <button type="submit">Karte speichern</button>
+      </form>
+
+      <section class="panel tools-panel">
+        <div>
+          <h2>CSV Import/Export</h2>
+          <p class="muted">CSV-Spalten: question, answer, category</p>
+        </div>
+        <form class="import-form" method="post" action="{{ url_for('import_cards') }}" enctype="multipart/form-data">
+          <label>
+            CSV-Datei importieren
+            <input type="file" name="csv_file" accept=".csv,text/csv" required>
+          </label>
+          <button type="submit">Importieren</button>
+        </form>
+        <a class="button-link secondary" href="{{ url_for('export_cards') }}">CSV exportieren</a>
+      </section>
+    </div>
 
     <section class="panel">
       <div class="panel-title">
