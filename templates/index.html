@@ -3,8 +3,8 @@
 {% block content %}
   <section class="hero">
     <div>
-      <p class="eyebrow">Deine Lernkarten</p>
-      <h1>Karten erstellen, speichern und gezielt wiederholen.</h1>
+      <p class="eyebrow">Bibliothek</p>
+      <h1>{{ stats.total }} Karten</h1>
     </div>
     <div class="stats">
       <span><strong>{{ stats.total }}</strong>Karten</span>
@@ -15,9 +15,12 @@
   </section>
 
   <section class="grid two">
-    <div class="sidebar-stack">
-      <form class="panel form" method="post" action="{{ url_for('create_card') }}">
-        <h2>Neue Karte</h2>
+    <aside class="sidebar-stack">
+      <form class="panel form composer" method="post" action="{{ url_for('create_card') }}">
+        <div class="panel-heading">
+          <h2>Neue Karte</h2>
+          <span class="dot"></span>
+        </div>
         <label>
           Frage
           <textarea name="question" rows="4" required placeholder="Was möchtest du lernen?"></textarea>
@@ -34,10 +37,11 @@
       </form>
 
       <section class="panel tools-panel">
-        <div>
+        <div class="panel-heading">
           <h2>CSV Import/Export</h2>
-          <p class="muted">CSV-Spalten: question, answer, category</p>
+          <span class="dot blue"></span>
         </div>
+        <p class="muted">Spalten: question, answer, category</p>
         <form class="import-form" method="post" action="{{ url_for('import_cards') }}" enctype="multipart/form-data">
           <label>
             CSV-Datei importieren
@@ -47,11 +51,20 @@
         </form>
         <a class="button-link secondary" href="{{ url_for('export_cards') }}">CSV exportieren</a>
       </section>
-    </div>
+    </aside>
 
-    <section class="panel">
+    <section class="panel library-panel">
       <div class="panel-title">
-        <h2>Gespeicherte Karten</h2>
+        <div>
+          <h2>Gespeicherte Karten</h2>
+          <p class="muted">
+            {% if active_category %}
+              {{ stats.filtered_total }} in {{ active_category }}
+            {% else %}
+              Neueste {{ stats.visible }} von {{ stats.filtered_total }}
+            {% endif %}
+          </p>
+        </div>
         <form method="get" class="filter">
           <select name="category" onchange="this.form.submit()">
             <option value="">Alle Kategorien</option>
@@ -69,7 +82,10 @@
               <span class="tag">{{ card.category }}</span>
               <h3>{{ card.question }}</h3>
               <p>{{ card.answer }}</p>
-              <small>{{ card.times_seen }}x gelernt, {{ card.success_rate }}% richtig</small>
+              <div class="card-meta">
+                <small>{{ card.times_seen }}x gelernt</small>
+                <small>{{ card.success_rate }}% richtig</small>
+              </div>
             </div>
             <form method="post" action="{{ url_for('delete_card', card_id=card.id) }}">
               <button class="ghost danger" type="submit">Löschen</button>
@@ -79,6 +95,9 @@
           <p class="empty">Noch keine Karten vorhanden.</p>
         {% endfor %}
       </div>
+      {% if stats.filtered_total > stats.visible %}
+        <p class="list-note">Es werden die neuesten {{ stats.visible }} Karten angezeigt.</p>
+      {% endif %}
     </section>
   </section>
 {% endblock %}

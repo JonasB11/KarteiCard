@@ -6,25 +6,27 @@ from datetime import datetime, timezone
 
 from flask import Flask, Response, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, inspect
 
 
 db = SQLAlchemy()
+MAX_VISIBLE_CARDS = 80
 
 
 class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(120), nullable=False, default="Allgemein")
+    category = db.Column(db.String(120), nullable=False, default="Allgemein", index=True)
     times_seen = db.Column(db.Integer, nullable=False, default=0)
     times_correct = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(
         db.DateTime,
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+        index=True,
     )
 
     @property
@@ -47,6 +49,20 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        existing_indexes = {index["name"] for index in inspect(db.engine).get_indexes(Card.__tablename__)}
+        for index in Card.__table__.indexes:
+            if index.name not in existing_indexes:
+                index.create(bind=db.engine)
+
+    def categories():
+        return [
+            row[0]
+            for row in db.session.query(Card.category)
+            .filter(Card.category != "")
+            .distinct()
+            .order_by(Card.category.asc())
+            .all()
+        ]
 
     @app.route("/")
     def index():
@@ -55,22 +71,23 @@ def create_app():
         if category:
             query = query.filter(Card.category == category)
 
-        cards = query.order_by(Card.created_at.desc()).all()
-        categories = [
-            row[0]
-            for row in db.session.query(Card.category)
-            .filter(Card.category != "")
-            .distinct()
-            .order_by(Card.category.asc())
-            .all()
-        ]
+        cards = query.order_by(Card.created_at.desc()).limit(MAX_VISIBLE_CARDS).all()
+        category_list = categories()
+        total, learned, correct = db.session.query(
+            func.count(Card.id),
+            func.coalesce(func.sum(Card.times_seen), 0),
+            func.coalesce(func.sum(Card.times_correct), 0),
+        ).one()
+        filtered_total = query.count() if category else total
         stats = {
-            "total": Card.query.count(),
-            "categories": len(categories),
-            "learned": db.session.query(func.coalesce(func.sum(Card.times_seen), 0)).scalar(),
-            "correct": db.session.query(func.coalesce(func.sum(Card.times_correct), 0)).scalar(),
+            "total": total,
+            "filtered_total": filtered_total,
+            "visible": len(cards),
+            "categories": len(category_list),
+            "learned": learned,
+            "correct": correct,
         }
-        return render_template("index.html", cards=cards, categories=categories, active_category=category, stats=stats)
+        return render_template("index.html", cards=cards, categories=category_list, active_category=category, stats=stats)
 
     @app.route("/cards", methods=["POST"])
     def create_card():
@@ -174,20 +191,25 @@ def create_app():
         if category:
             query = query.filter(Card.category == category)
 
-        cards = query.order_by(Card.times_seen.asc(), Card.updated_at.asc()).all()
-        card = cards[0] if cards else None
-        categories = [row[0] for row in db.session.query(Card.category).distinct().order_by(Card.category.asc()).all()]
-        return render_template("learn.html", card=card, categories=categories, active_category=category)
+        card = query.order_by(Card.times_seen.asc(), Card.updated_at.asc()).first()
+        return render_template("learn.html", card=card, categories=categories(), active_category=category)
 
     @app.route("/quiz")
     def quiz():
-        cards = Card.query.all()
-        if len(cards) < 2:
+        card_count = Card.query.count()
+        if card_count < 2:
             return render_template("quiz.html", question_card=None, options=[], needs_more=True)
 
-        question_card = random.choice(cards)
-        wrong_options = [card.answer for card in cards if card.id != question_card.id]
-        options = random.sample(wrong_options, k=min(3, len(wrong_options)))
+        question_card = Card.query.offset(random.randrange(card_count)).first()
+        wrong_options = [
+            row[0]
+            for row in db.session.query(Card.answer)
+            .filter(Card.id != question_card.id)
+            .order_by(func.rand())
+            .limit(3)
+            .all()
+        ]
+        options = wrong_options
         options.append(question_card.answer)
         random.shuffle(options)
         return render_template("quiz.html", question_card=question_card, options=options, needs_more=False)
